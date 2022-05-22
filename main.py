@@ -1,5 +1,6 @@
 # Project - Pygame snake
 
+from multiprocessing.sharedctypes import Value
 import pygame
 from pygame.locals import *
 import time
@@ -107,7 +108,7 @@ class Game:
 
     def play_background_music(self):
         pygame.mixer.music.load('resources/bg_music_1.mp3')
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(-1)
 
     def play_sound(self, sound):
         sound = pygame.mixer.Sound(f'resources/{sound}.mp3')
@@ -135,6 +136,11 @@ class Game:
             if self.is_collision(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
                 self.play_sound('crash')
                 raise ValueError('Game over')
+
+        # Snake colliding with the boundries of the window
+        if not (0 <= self.snake.x[0] < 1000 and 0 <= self.snake.y[0] < 800):
+            self.play_sound('crash')
+            raise ValueError('Hit the boundry')
 
     def show_game_over(self):
         self.render_background()
