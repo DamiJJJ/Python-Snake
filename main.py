@@ -1,37 +1,40 @@
 # Project - Pygame snake
+# Damian Mrozek
 
-from multiprocessing.sharedctypes import Value
 import pygame
 from pygame.locals import *
-import time
 import random
 
 SIZE = 40
 BACKGROUND_COLOR = (110, 110, 5)
 
-class Apple:
+class Mouse:
     def __init__(self, parent_screen):
-        self.image = pygame.image.load('resources/apple.jpg').convert()
+        self.image = pygame.image.load('resources/mouse.png').convert_alpha()
         self.parent_screen = parent_screen
-        self.x = SIZE*3
-        self.y = SIZE*3
+        self.x = SIZE*random.randint(1, 23)
+        self.y = SIZE*random.randint(1, 18)
 
     def draw(self):
         self.parent_screen.blit(self.image, (self.x, self.y))
         pygame.display.flip()
 
     def move(self):
-        self.x = random.randint(0, 24) * SIZE
-        self.y = random.randint(0, 19) * SIZE
+        self.x = random.randint(1, 23) * SIZE
+        self.y = random.randint(1, 18) * SIZE
 
 class Snake:
     def __init__(self, parent_screen, length):
         self.length = length
         self.parent_screen = parent_screen
-        self.block = pygame.image.load('resources/block.jpg').convert()
+        self.block = pygame.image.load('resources/body.png').convert_alpha()
+        self.head = pygame.image.load('resources/head_down.png').convert_alpha()
         self.x = [SIZE]*length
         self.y = [SIZE]*length
         self.direction = 'down'
+
+    def set_head(self, direction):
+        self.head = pygame.image.load(f'resources/head_{direction}.png').convert_alpha()
 
     def increase_length(self):
         self.length += 1
@@ -43,27 +46,32 @@ class Snake:
             self.direction = 'left'
         if not(self.direction == "right"):
             self.direction = 'left'
+            self.set_head(self.direction)
 
     def move_right(self):
         if self.length == 1:          
             self.direction = 'right'
         if not(self.direction == "left"):
             self.direction = 'right'
+            self.set_head(self.direction)
 
     def move_up(self):
         if self.length == 1:
             self.direction = 'up'
         if not(self.direction == 'down'):
-            self.direction = 'up'   
+            self.direction = 'up' 
+            self.set_head(self.direction)  
 
     def move_down(self):
         if self.length == 1:
             self.direction = 'down'
         if not(self.direction == 'up'):
             self.direction = 'down'
+            self.set_head(self.direction)
 
     def draw(self):
-        for i in range(self.length):
+        self.parent_screen.blit(self.head, (self.x[0], self.y[0]))
+        for i in range(1, self.length):
             self.parent_screen.blit(self.block, (self.x[i], self.y[i]))
         pygame.display.flip()
 
@@ -91,8 +99,8 @@ class Game:
         self.surface = pygame.display.set_mode((1000, 800))
         self.snake = Snake(self.surface, 1)
         self.snake.draw()
-        self.apple = Apple(self.surface)
-        self.apple.draw()
+        self.mouse = Mouse(self.surface)
+        self.mouse.draw()
     
     def is_collision(self, x1, y1, x2, y2):
         if x1 >= x2 and x1 < x2 + SIZE:
@@ -102,13 +110,14 @@ class Game:
         return False
 
     def display_score(self):
-        font = pygame.font.SysFont('arial', 30)
+        font = pygame.font.SysFont('helvetica', 30)
         score = font.render(f'Wynik: {self.snake.length}', True, (255, 255, 255))
-        self.surface.blit(score, (800, 10))
+        self.surface.blit(score, (875, 10))
 
     def play_background_music(self):
         pygame.mixer.music.load('resources/bg_music_1.mp3')
         pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.25)
 
     def play_sound(self, sound):
         sound = pygame.mixer.Sound(f'resources/{sound}.mp3')
@@ -121,40 +130,43 @@ class Game:
     def play(self):
         self.render_background()
         self.snake.walk()
-        self.apple.draw()
+        self.mouse.draw()
         self.display_score()
         pygame.display.flip()
 
-        # Snake colliding with apple
-        if self.is_collision(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
-            self.play_sound('ding')
+        # Snake colliding with Mouse
+        if self.is_collision(self.snake.x[0], self.snake.y[0], self.mouse.x, self.mouse.y):
+            self.play_sound('eat')
             self.snake.increase_length()
-            self.apple.move()
+            self.mouse.move()
 
         # Snake colliding with itself
         for i in range(3, self.snake.length):
             if self.is_collision(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
-                self.play_sound('crash')
+                self.play_sound('game_over')
                 raise ValueError('Game over')
 
         # Snake colliding with the boundries of the window
         if not (0 <= self.snake.x[0] < 1000 and 0 <= self.snake.y[0] < 800):
-            self.play_sound('crash')
+            self.play_sound('game_over')
             raise ValueError('Hit the boundry')
 
     def show_game_over(self):
         self.render_background()
-        font = pygame.font.SysFont('arial', 30)
+        font = pygame.font.SysFont('helvetica', 30)
         line1 = font.render(f'Przegrałeś! Twój wynik to: {self.snake.length}', True, (255, 0, 0))
-        self.surface.blit(line1, (200, 300))
+        line1_rect = line1.get_rect(center=(500, 350))
+        self.surface.blit(line1, line1_rect)
+
         line2 = font.render('Aby zagrać ponownie wciśnij Enter. Aby opuścić naciśnij Escape!', True, (255, 255, 255))
-        self.surface.blit(line2, (200, 350))
+        line2_rect = line2.get_rect(center=(500, 400))
+        self.surface.blit(line2, line2_rect)
         pygame.display.flip()
         pygame.mixer.music.pause()
 
     def reset(self):
         self.snake = Snake(self.surface, 1)
-        self.apple = Apple(self.surface)
+        self.mouse = Mouse(self.surface)
 
     def run(self):
         running = True
@@ -193,7 +205,7 @@ class Game:
                 pause = True
                 self.reset()
 
-            time.sleep(.15)
+            pygame.time.delay(150)
 
 
 if __name__ == '__main__':
