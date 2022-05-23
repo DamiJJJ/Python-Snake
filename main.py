@@ -89,6 +89,7 @@ class Snake:
         if self.direction == 'down':
             self.y[0] += SIZE    
         self.draw() 
+        
 class Game:
     def __init__(self):
         pygame.init()
