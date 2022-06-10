@@ -17,3 +17,4 @@ Type in the windows cmd: ```python -m pip install pygame```
 
 
 
+read
