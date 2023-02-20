@@ -144,12 +144,24 @@ class Game:
         for i in range(3, self.snake.length):
             if self.is_collision(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
                 self.play_sound('game_over')
-                raise ValueError('Game over')
+                raise ValueError('Game over')      
 
         # Snake colliding with the boundries of the window
         if not (0 <= self.snake.x[0] < 1000 and 0 <= self.snake.y[0] < 800):
             self.play_sound('game_over')
             raise ValueError('Hit the boundry')
+        
+        # Preventing mouse spawning inside snake
+        for i in range(3, self.snake.length):
+            if self.is_collision(self.snake.x[i], self.snake.y[i], self.mouse.x, self.mouse.y):
+                print("MYSZ")
+                self.mouse.move()
+        
+         # Preventing mouse spawning inside snake
+        for i in range(3, self.snake.length):
+            if self.is_collision(self.snake.x[i], self.snake.y[i], self.mouse.x, self.mouse.y):
+                print("MYSZ")
+                self.mouse.move()
 
     def show_game_over(self):
         self.render_background()

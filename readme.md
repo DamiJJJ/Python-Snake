@@ -12,5 +12,4 @@ Type in the windows cmd: ```python -m pip install pygame```
 
 ## Known bugs/issues
 
-- the mouse may appear in the snake's body
 - if you click arrows fast enough snake will move reverse into himself
